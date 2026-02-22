@@ -1,0 +1,95 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const salesChartEl = document.getElementById('salesChart');
+
+if (salesChartEl) {
+    fetch('get_sales_data.php')
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error('Failed to load sales data');
+            }
+            return res.json();
+        })
+        .then((data) => {
+            const labels = Array.isArray(data.labels) ? data.labels : [];
+            const salesValues = Array.isArray(data.values)
+                ? data.values.map((value) => Number(value) || 0)
+                : [];
+            const maxSales = salesValues.length ? Math.max(...salesValues) : 0;
+
+            let yStepSize = 100;
+            if (maxSales > 1000 && maxSales <= 5000) {
+                yStepSize = 500;
+            } else if (maxSales > 5000 && maxSales <= 10000) {
+                yStepSize = 1000;
+            } else if (maxSales > 10000 && maxSales <= 50000) {
+                yStepSize = 5000;
+            } else if (maxSales > 50000) {
+                yStepSize = 10000;
+            }
+
+            const ySuggestedMax = maxSales > 0
+                ? Math.ceil((maxSales * 1.1) / yStepSize) * yStepSize
+                : yStepSize;
+
+            new Chart(salesChartEl, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: salesValues,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4,
+                        maxBarThickness: 22
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const amount = Number(context.parsed.y || 0);
+                                    return 'Rs ' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxRotation: 0
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: ySuggestedMax,
+                            title: {
+                                display: true,
+                                text: 'Revenue (Rs)'
+                            },
+                            ticks: {
+                                stepSize: yStepSize,
+                                callback: function(value) {
+                                    return Number(value).toLocaleString('en-IN');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch((err) => {
+            console.error(err);
+        });
+}
+
+</script>
