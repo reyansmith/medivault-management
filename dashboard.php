@@ -1,0 +1,204 @@
+<?php
+session_start();
+require_once ("config.php");
+
+/* -------- SESSION PROTECTION -------- */
+if(!isset($_SESSION['role']) || $_SESSION['role'] != "admin"){
+    header("Location: ../mlogin.php");
+    exit();
+}
+
+/* -------- DASHBOARD QUERIES -------- */
+
+// Low Stock (<10)
+$lowStock = 0;
+$result = $conn->query("SELECT COUNT(*) as total FROM stock WHERE quantity < 10");
+if($result){
+    $row = $result->fetch_assoc();
+    $lowStock = $row['total'];
+}
+
+// Expiring in 30 Days
+$expiring = 0;
+$result = $conn->query("SELECT COUNT(*) as total FROM stock WHERE expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
+if($result){
+    $row = $result->fetch_assoc();
+    $expiring = $row['total'];
+}
+
+// Today's Sales
+$sales = 0;
+$result = $conn->query("SELECT SUM(total_amount) as total FROM bill WHERE DATE(bill_date)=CURDATE()");
+if($result){
+    $row = $result->fetch_assoc();
+    $sales = $row['total'] ?? 0;
+}
+
+// Today's Bills Count
+$todayBills = 0;
+$result = $conn->query("SELECT COUNT(*) as total FROM bill WHERE DATE(bill_date)=CURDATE()");
+if($result){
+    $row = $result->fetch_assoc();
+    $todayBills = $row['total'];
+}
+
+// Leaderboard (Last 30 Days)
+$leaderboard = [];
+$leaderboardSql = "
+    SELECT e.username AS employee_name,
+           COUNT(b.bill_id) AS bill_count,
+           COALESCE(SUM(b.total_amount), 0) AS total_sales
+    FROM employee e
+    LEFT JOIN bill b
+        ON b.emp_id = e.emp_id
+       AND DATE(b.bill_date) BETWEEN DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND CURDATE()
+    GROUP BY e.emp_id, e.username
+    ORDER BY total_sales DESC, bill_count DESC, e.username ASC
+    LIMIT 5
+";
+$result = $conn->query($leaderboardSql);
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $leaderboard[] = $row;
+    }
+}
+
+// Recent Transactions
+$recentTransactions = [];
+$recentTransactionsSql = "
+    SELECT b.bill_id,
+           b.bill_date,
+           b.customer_name,
+           b.total_amount,
+           e.username AS employee_name
+    FROM bill b
+    LEFT JOIN employee e ON e.emp_id = b.emp_id
+    ORDER BY b.bill_date DESC
+    LIMIT 8
+";
+$result = $conn->query($recentTransactionsSql);
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $recentTransactions[] = $row;
+    }
+}
+?>
+
+<?php include("header.php"); ?>
+<?php include("sidebar.php"); ?>
+
+<div class="main">
+
+    <div class="topbar">
+        <div class="topbar-text">
+            <h2>Dashboard</h2>
+        </div>
+
+        <div class="top-actions">
+            <a href="../logout.php" class="logout-btn">Logout</a>
+        </div>
+    </div>
+
+    <!-- CARDS -->
+    <div class="cards">
+
+        <div class="card">
+            <h4>Low Stock</h4>
+            <h2><?php echo $lowStock; ?></h2>
+        </div>
+
+        <div class="card">
+            <h4>Expiring Soon</h4>
+            <h2><?php echo $expiring; ?></h2>
+        </div>
+
+        <div class="card">
+            <h4>Today's Sales</h4>
+            <h2>&#8377; <?php echo number_format((float)$sales, 2); ?></h2>
+        </div>
+
+        <div class="card">
+            <h4>Today's Bills</h4>
+            <h2><?php echo (int)$todayBills; ?></h2>
+        </div>
+
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="box">
+            <h3>Sales (7 Days)</h3>
+            <div class="chart-compact">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="box">
+            <h3>Top Employees (30 Days)</h3>
+            <div class="table-wrap">
+                <table class="leaderboard-table rank-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Employee</th>
+                            <th>Bills</th>
+                            <th>Sales</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(empty($leaderboard)){ ?>
+                            <tr>
+                                <td colspan="4">No employee billing data found.</td>
+                            </tr>
+                        <?php } else { ?>
+                            <?php foreach($leaderboard as $index => $item){ ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo htmlspecialchars($item['employee_name'], ENT_QUOTES, "UTF-8"); ?></td>
+                                    <td><?php echo (int)$item['bill_count']; ?></td>
+                                    <td>&#8377; <?php echo number_format((float)$item['total_sales'], 2); ?></td>
+                                </tr>
+                            <?php } ?>
+                        <?php } ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="box recent-box">
+        <h3>Recent Transactions</h3>
+        <div class="table-wrap">
+            <table class="leaderboard-table transactions-table">
+                <thead>
+                    <tr>
+                        <th>Bill #</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Employee</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if(empty($recentTransactions)){ ?>
+                        <tr>
+                            <td colspan="5">No recent transactions found.</td>
+                        </tr>
+                    <?php } else { ?>
+                        <?php foreach($recentTransactions as $txn){ ?>
+                            <tr>
+                                <td><?php echo (int)$txn['bill_id']; ?></td>
+                                <td><?php echo date("d M Y, h:i A", strtotime($txn['bill_date'])); ?></td>
+                                <td><?php echo htmlspecialchars($txn['customer_name'] ?? '-', ENT_QUOTES, "UTF-8"); ?></td>
+                                <td><?php echo htmlspecialchars($txn['employee_name'] ?? '-', ENT_QUOTES, "UTF-8"); ?></td>
+                                <td>&#8377; <?php echo number_format((float)$txn['total_amount'], 2); ?></td>
+                            </tr>
+                        <?php } ?>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<?php include("footer.php"); ?>
