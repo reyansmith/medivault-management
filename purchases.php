@@ -7,10 +7,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
     exit();
 }
 
-<<<<<<< HEAD
-=======
-// Fetch purchases with dynamic total from purchase_details
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
 $sql = "
 SELECT p.purchase_id, p.vendor_id, p.purchase_date, 
        IFNULL(SUM(pd.quantity * pd.cost_price),0) AS total_amount
@@ -28,10 +24,6 @@ if($result){
     }
 }
 
-<<<<<<< HEAD
-=======
-// Fetch vendors for name display
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
 $vendor_result = $conn->query("SELECT vendor_id, name FROM vendor");
 $vendors = [];
 if($vendor_result){
@@ -54,9 +46,9 @@ include("sidebar.php");
     </div>
 
     <div class="box">
-        <table class="leaderboard-table" style="width:100%; border-collapse: collapse;">
+        <table class="leaderboard-table purchase-summary-table">
             <thead>
-                <tr style="background:#eee;">
+                <tr>
                     <th>Purchase ID</th>
                     <th>Vendor</th>
                     <th>Purchase Date</th>
@@ -66,14 +58,14 @@ include("sidebar.php");
             <tbody>
                 <?php
                 if(empty($purchases)){
-                    echo "<tr><td colspan='4' style='text-align:center;'>No purchases found.</td></tr>";
+                    echo "<tr><td colspan='4' class='table-center'>No purchases found.</td></tr>";
                 } else {
                     foreach($purchases as $p){
                         echo "<tr>";
                         echo "<td>" . $p['purchase_id'] . "</td>";
                         echo "<td>" . ($vendors[$p['vendor_id']] ?? '-') . "</td>";
                         echo "<td>" . $p['purchase_date'] . "</td>";
-                        echo "<td>₹ " . number_format($p['total_amount'],2) . "</td>";
+                        echo "<td>â‚¹ " . number_format($p['total_amount'],2) . "</td>";
                         echo "</tr>";
                     }
                 }

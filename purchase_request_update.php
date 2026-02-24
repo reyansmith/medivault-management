@@ -92,25 +92,27 @@ include("sidebar.php");
     <div class="box">
         <?php 
         if($message) {
-            echo "<p style='color:green;'>" . $message . "</p>";
+            echo "<p class='status-success'>" . $message . "</p>";
         }
         ?>
 
-        <form method="POST">
+        <form method="POST" class="purchase-entry-form">
             <h3>Purchase Info</h3>
-            <input type="text" name="purchase_id" placeholder="Purchase ID" required>
-            <select name="vendor_id" required>
-                <option value="">Select Vendor</option>
-                <?php
-                foreach($vendors as $v){
-                    echo "<option value='" . $v['vendor_id'] . "'>" . $v['vendor_id'] . " - " . $v['name'] . "</option>";
-                }
-                ?>
-            </select>
-            <input type="date" name="purchase_date" required>
+            <div class="purchase-info-row">
+                <input type="text" name="purchase_id" placeholder="Purchase ID" required>
+                <select name="vendor_id" required>
+                    <option value="">Select Vendor</option>
+                    <?php
+                    foreach($vendors as $v){
+                        echo "<option value='" . $v['vendor_id'] . "'>" . $v['vendor_id'] . " - " . $v['name'] . "</option>";
+                    }
+                    ?>
+                </select>
+                <input type="date" name="purchase_date" required>
+            </div>
 
             <h3>Purchase Details</h3>
-            <table border="1" style="width:100%; margin-bottom:20px;">
+            <table class="purchase-form-table">
                 <tr>
                     <th>Detail ID</th>
                     <th>Medicine</th>
@@ -146,11 +148,11 @@ include("sidebar.php");
                 </tr>
             </table>
 
-            <button type="submit">Add Purchase + Details</button>
+            <button type="submit" class="btn btn-primary">Add Purchase + Details</button>
         </form>
 
         <h3>Existing Purchase Details</h3>
-        <table border="1" style="width:100%; border-collapse:collapse;">
+        <table class="purchase-list-table">
             <tr>
                 <th>Detail ID</th>
                 <th>Purchase ID</th>
@@ -163,7 +165,7 @@ include("sidebar.php");
             </tr>
             <?php
             if(empty($details)){
-                echo "<tr><td colspan='8' style='text-align:center;'>No details found</td></tr>";
+                echo "<tr><td colspan='8' class='table-center'>No details found</td></tr>";
             } else {
                 foreach($details as $d){
                     echo "<tr>";

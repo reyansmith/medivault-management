@@ -261,6 +261,411 @@ body {
     white-space: nowrap;
 }
 
+/* Used in `inventory.php` */
+.inv-nav {
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 12px;
+}
+
+.inv-nav a {
+    padding: 8px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    transition: 0.2s;
+}
+
+.inv-nav a.on {
+    background: #2563eb;
+    color: #fff;
+}
+
+.inv-alert {
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 14px;
+}
+
+.inv-grid {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.inv-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.inv-btn.primary {
+    background: #2563eb;
+    color: #fff;
+    width: 100px;
+}
+
+.inv-btn.danger {
+    background: #dc2626;
+    color: #fff;
+}
+
+.inv-search-form {
+    margin-bottom: 10px;
+}
+
+.inv-search-input {
+    padding: 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    width: 200px;
+}
+
+/* Used in `vendor.php` */
+.vendor-message {
+    color: #15803d;
+    margin-bottom: 10px;
+}
+
+.vendor-add-btn {
+    margin-bottom: 15px;
+}
+
+.vendor-form-hidden {
+    display: none;
+    margin-bottom: 20px;
+}
+
+.vendor-edit-form {
+    margin-bottom: 20px;
+    padding: 12px 0;
+}
+
+.vendor-edit-title {
+    margin: 0 0 10px 0;
+}
+
+.vendor-cancel-btn {
+    margin-left: 0;
+}
+
+.vendor-inline-form {
+    display: inline-block;
+}
+
+.vendor-form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.vendor-input {
+    min-width: 160px;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
+.vendor-table th:last-child,
+.vendor-table td:last-child {
+    text-align: left;
+}
+
+.action-wrap {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Reusable buttons across pages */
+.btn {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1f2937;
+}
+
+.btn:hover {
+    background: #e2e8f0;
+}
+
+.btn-primary {
+    background: #1f2937;
+    border-color: #1f2937;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #111827;
+}
+
+.btn-danger {
+    background: #dc2626;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+.btn-secondary {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1f2937;
+}
+
+.btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.btn-sm {
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* Used in `mlogin.php` and `mregistration.php` */
+.auth-page {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f9d9a;
+}
+
+.auth-box {
+    width: 400px;
+    margin: 120px auto;
+    background: #fff;
+    padding: 40px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.35);
+}
+
+.auth-box-register {
+    margin-top: 80px;
+}
+
+.auth-box input,
+.auth-box select {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.auth-box button {
+    width: 95%;
+    padding: 12px;
+    background: navy;
+    color: #fff;
+    border: none;
+}
+
+.auth-box button:hover {
+    background: darkblue;
+}
+
+.auth-help {
+    margin-top: 10px;
+}
+
+.auth-help a {
+    text-decoration: none;
+    color: navy;
+    font-weight: bold;
+}
+
+/* Used in `add_purchase.php` and `purchase_request_update.php` */
+.status-success {
+    color: #15803d;
+    margin-bottom: 10px;
+}
+
+.status-error {
+    color: #b91c1c;
+    margin-bottom: 10px;
+}
+
+.purchase-form-table,
+.purchase-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #d1d5db;
+}
+
+.purchase-entry-form {
+    margin-bottom: 18px;
+}
+
+.purchase-info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 180px;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.purchase-info-row input,
+.purchase-info-row select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.purchase-form-table {
+    margin-bottom: 20px;
+}
+
+.purchase-form-table th,
+.purchase-form-table td,
+.purchase-list-table th,
+.purchase-list-table td {
+    border: 1px solid #e5e7eb;
+    padding: 8px;
+}
+
+.purchase-form-table th,
+.purchase-list-table th {
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 600;
+}
+
+.purchase-form-table input,
+.purchase-form-table select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+}
+
+.table-center {
+    text-align: center;
+}
+
+/* Used in `purchases.php` and `purchase_reuqest.php` */
+.purchase-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Used in `employees.php` */
+.employees-section-form {
+    margin-bottom: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.employees-section-form label {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+    margin: 0;
+}
+
+.employees-section-form label strong {
+    font-weight: 600;
+}
+
+.employees-section-form select {
+    min-width: 210px;
+    height: 36px;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #111827;
+    font-size: 14px;
+}
+
+.employees-section-form select:focus {
+    border-color: #94a3b8;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.15);
+}
+
+.employees-user-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.employees-user-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.employees-user-title {
+    margin-bottom: 10px;
+}
+
+.employees-user-input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.employees-user-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #111827;
+    color: #fff;
+    cursor: pointer;
+}
+
 /* RESPONSIVE */
 @media(max-width: 992px) {
     .middle {
@@ -289,6 +694,29 @@ body {
         padding: 16px;
     }
 
+    .inv-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-box {
+        width: min(92vw, 420px);
+        margin: 48px auto;
+        padding: 24px;
+    }
+
+    .purchase-info-row {
+        grid-template-columns: 1fr;
+    }
+
+    .employees-section-form {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .employees-section-form select {
+        width: 100%;
+        max-width: 320px;
+    }
 }
 .logout-btn {
     background: #e74c3c;

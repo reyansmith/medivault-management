@@ -1,6 +1,5 @@
 <?php
 session_start();
-<<<<<<< HEAD
 require_once "config.php";
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] != 'admin') {
@@ -91,184 +90,10 @@ $stocks = $conn->query("
     FROM stock s
     JOIN product p ON p.medicine_id=s.medicine_id
 ");
-=======
-require_once ("config.php");
-
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
-    header("Location: ../mlogin.php");
-    exit();
-}
-
-$inventory = [];
-$sql = "
-SELECT p.medicine_name,
-       s.batch_no,
-       s.expiry_date,
-       s.quantity,
-       pd.cost_price,
-       s.selling_price
-FROM stock s
-INNER JOIN product p ON p.medicine_id = s.medicine_id
-LEFT JOIN purchase_details pd 
-       ON pd.medicine_id = s.medicine_id
-          AND pd.purchase_detail_id = (
-              SELECT purchase_detail_id 
-              FROM purchase_details 
-              WHERE medicine_id = s.medicine_id 
-              ORDER BY purchase_detail_id DESC 
-              LIMIT 1
-          )
-ORDER BY p.medicine_name ASC, s.expiry_date ASC
-";
-$result = $conn->query($sql);
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $inventory[] = $row;
-    }
-}
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
 ?>
 
 <?php include("header.php"); ?>
 <?php include("sidebar.php"); ?>
-
-<<<<<<< HEAD
-<style>
-
-/* NAVIGATION */
-.inv-nav {
-    display: inline-flex;
-    gap: 6px;
-    margin-bottom: 20px;
-    background: #f1f5f9;
-    padding: 6px;
-    border-radius: 12px;
-}
-
-.inv-nav a {
-    padding: 8px 16px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    color: #334155;
-    transition: 0.2s;
-}
-
-.inv-nav a.on {
-    background: #2563eb;
-    color: #fff;
-}
-
-/* ALERT */
-.inv-alert {
-    padding: 10px 15px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    background: #dcfce7;
-    color: #166534;
-    font-size: 14px;
-}
-
-/* GRID */
-.inv-grid {
-    display: grid;
-    grid-template-columns: 350px 1fr;
-    gap: 20px;
-}
-
-@media (max-width: 992px) {
-    .inv-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* BOX */
-.box {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-/* FORM */
-.box form {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    margin-bottom: 6px;
-    font-weight: 500;
-    font-size: 14px;
-    color: #374151;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-    padding: 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 14px;
-    width: 100%;
-}
-
-.form-group textarea {
-    min-height: 80px;
-    resize: vertical;
-}
-
-/* BUTTONS */
-.inv-btn {
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
-    margin-top: 5px;
-}
-
-.inv-btn.primary {
-    background: #2563eb;
-    color: #fff;
-    width: 100px;
-    margin-right: 0px;
-}
-
-.inv-btn.danger {
-    background: #dc2626;
-    color: #fff;
-}
-
-/* TABLE */
-.leaderboard-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.leaderboard-table th,
-.leaderboard-table td {
-    padding: 10px;
-    border-bottom: 1px solid #e5e7eb;
-    text-align: left;
-}
-
-.leaderboard-table th {
-    background: #f9fafb;
-}
-
-.leaderboard-table tr:hover {
-    background: #f3f4f6;
-}
-
-</style>
 
 <div class="main">
 
@@ -316,12 +141,11 @@ if ($result) {
 
         <div class="box">
             <h3>Medicine List</h3>
-            <form method="GET" style="margin-bottom:10px;">
+            <form method="GET" class="inv-search-form">
     <input type="hidden" name="section" value="products">
-    <input type="text" name="search" 
+    <input type="text" name="search" class="inv-search-input"
            placeholder="Search Medicine..."
-           value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>"
-           style="padding:8px; border:1px solid #d1d5db; border-radius:8px; width:200px;">
+           value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
     <button class="inv-btn primary" type="submit">Search</button>
 </form>
             <table class="leaderboard-table">
@@ -437,54 +261,8 @@ if ($result) {
 
 </div>
 <?php } ?>
-=======
-<div class="main">
-    <div class="topbar">
-        <div class="topbar-text">
-            <h2>Inventory</h2>
-        </div>
-        <div class="top-actions">
-            <a href="../logout.php" class="logout-btn">Logout</a>
-        </div>
-    </div>
 
-    <div class="box">
-        <div class="table-wrap">
-            <table class="leaderboard-table transactions-table">
-                <thead>
-                    <tr>
-                        <th>Medicine</th>
-                        <th>Batch</th>
-                        <th>Expiry</th>
-                        <th>Qty</th>
-                        <th>Cost</th>
-                        <th>Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($inventory)) { ?>
-                        <tr>
-                            <td colspan="6">No inventory data found.</td>
-                        </tr>
-                    <?php } else { ?>
-                        <?php
-                        foreach ($inventory as $item) {
-                            echo "<tr>";
-                            echo "<td>" . $item['medicine_name'] . "</td>";
-                            echo "<td>" . $item['batch_no'] . "</td>";
-                            echo "<td>" . $item['expiry_date'] . "</td>";
-                            echo "<td>" . (int)$item['quantity'] . "</td>";
-                            echo "<td>&#8377; " . number_format((float)$item['cost_price'], 2) . "</td>";
-                            echo "<td>&#8377; " . number_format((float)$item['selling_price'], 2) . "</td>";
-                            echo "</tr>";
-                        }
-                        ?>
-                    <?php } ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
 </div>
 
 <?php include("footer.php"); ?>
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
+

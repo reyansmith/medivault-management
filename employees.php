@@ -1,19 +1,13 @@
 <?php
 session_start();
-<<<<<<< HEAD
 require_once("config.php");
 
 // Only admin can access
-=======
-require_once ("config.php");
-
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
     header("Location: ../mlogin.php");
     exit();
 }
 
-<<<<<<< HEAD
 $message = "";
 $error_message = "";
 $section = (isset($_GET['section']) && $_GET['section'] === "users") ? "users" : "sessions";
@@ -116,13 +110,6 @@ $users_query = $conn->query("SELECT emp_id, username, email FROM employee ORDER 
 if ($users_query) {
     while ($row = $users_query->fetch_assoc()) {
         $users[] = $row;
-=======
-$employees = [];
-$result = $conn->query("SELECT emp_id, username FROM employee ORDER BY username ASC");
-if ($result) {
-    while ($row = $result->fetch_assoc()) {
-        $employees[] = $row;
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
     }
 }
 ?>
@@ -140,8 +127,7 @@ if ($result) {
     </div>
 
     <div class="box">
-<<<<<<< HEAD
-        <form method="GET" style="margin-bottom:14px; display:flex; gap:10px; align-items:center;">
+        <form method="GET" class="employees-section-form">
             <label for="section"><strong>Choose Section:</strong></label>
             <select name="section" id="section" onchange="this.form.submit()">
                 <option value="sessions" <?php echo ($section === "sessions") ? "selected" : ""; ?>>Session Table</option>
@@ -150,10 +136,10 @@ if ($result) {
         </form>
 
         <?php if ($message) { ?>
-            <p style="color:green;"><?php echo htmlspecialchars($message); ?></p>
+            <p class="status-success"><?php echo htmlspecialchars($message); ?></p>
         <?php } ?>
         <?php if ($error_message) { ?>
-            <p style="color:#b91c1c;"><?php echo htmlspecialchars($error_message); ?></p>
+            <p class="status-error"><?php echo htmlspecialchars($error_message); ?></p>
         <?php } ?>
 
         <?php if ($section === "sessions") { ?>
@@ -189,33 +175,16 @@ if ($result) {
         <?php if ($section === "users") { ?>
             <h3>User Management</h3>
 
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
-                <form method="POST" style="border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
+            <div class="employees-user-grid">
+                <form method="POST" class="employees-user-card">
                     <input type="hidden" name="action" value="create_user">
-                    <h4 style="margin-bottom:10px;">Create User</h4>
-                    <input type="text" name="new_emp_id" placeholder="Employee ID" required style="width:100%; padding:8px; margin-bottom:8px;">
-                    <input type="text" name="new_username" placeholder="Username" required style="width:100%; padding:8px; margin-bottom:8px;">
-                    <input type="email" name="new_email" placeholder="Email" required style="width:100%; padding:8px; margin-bottom:8px;">
-                    <input type="password" name="new_password" placeholder="Password" required style="width:100%; padding:8px; margin-bottom:8px;">
-                    <button type="submit" style="padding:8px 12px; border:none; border-radius:6px; background:#111827; color:#fff; cursor:pointer;">Create</button>
+                    <h4 class="employees-user-title">Create User</h4>
+                    <input type="text" name="new_emp_id" placeholder="Employee ID" required class="employees-user-input">
+                    <input type="text" name="new_username" placeholder="Username" required class="employees-user-input">
+                    <input type="email" name="new_email" placeholder="Email" required class="employees-user-input">
+                    <input type="password" name="new_password" placeholder="Password" required class="employees-user-input">
+                    <button type="submit" class="employees-user-btn">Create</button>
                 </form>
-
-                <!-- <form method="POST" style="border:1px solid #e5e7eb; border-radius:8px; padding:12px;">
-                    <input type="hidden" name="action" value="update_user">
-                    <h4 style="margin-bottom:10px;">Update User</h4>
-                    <select name="edit_emp_id" required style="width:100%; padding:8px; margin-bottom:8px;">
-                        <option value="">Select Employee</option>
-                        <?php foreach ($users as $user) { ?>
-                            <option value="<?php echo htmlspecialchars($user['emp_id']); ?>">
-                                <?php echo htmlspecialchars($user['emp_id'] . " - " . $user['username']); ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                    <input type="text" name="edit_username" placeholder="New Username" required style="width:100%; padding:8px; margin-bottom:8px;">
-                    <input type="email" name="edit_email" placeholder="New Email" required style="width:100%; padding:8px; margin-bottom:8px;">
-                    <input type="password" name="edit_password" placeholder="New Password (optional)" style="width:100%; padding:8px; margin-bottom:8px;">
-                    <button type="submit" style="padding:8px 12px; border:none; border-radius:6px; background:#111827; color:#fff; cursor:pointer;">Update</button>
-                </form> -->
             </div>
 
             <h4>Employee Users</h4>
@@ -252,31 +221,6 @@ if ($result) {
             </table>
         <?php } ?>
 
-=======
-        <h3>Employee List</h3>
-        <table class="leaderboard-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($employees)) { ?>
-                    <tr>
-                        <td colspan="2">No employees found.</td>
-                    </tr>
-                <?php } else { ?>
-                    <?php foreach ($employees as $employee) { ?>
-                        <tr>
-                            <td><?php echo (int)$employee['emp_id']; ?></td>
-                            <td><?php echo htmlspecialchars($employee['username'], ENT_QUOTES, "UTF-8"); ?></td>
-                        </tr>
-                    <?php } ?>
-                <?php } ?>
-            </tbody>
-        </table>
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
     </div>
 </div>
 

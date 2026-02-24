@@ -48,9 +48,9 @@ include("sidebar.php");
     </div>
 
     <div class="box">
-        <table class="leaderboard-table" style="width:100%; border-collapse: collapse;">
+        <table class="leaderboard-table purchase-summary-table">
             <thead>
-                <tr style="background:#eee;">
+                <tr>
                     <th>Purchase ID</th>
                     <th>Vendor</th>
                     <th>Purchase Date</th>
@@ -60,7 +60,7 @@ include("sidebar.php");
             <tbody>
                 <?php
                 if(empty($purchases)){
-                    echo "<tr><td colspan='4' style='text-align:center;'>No purchases found.</td></tr>";
+                    echo "<tr><td colspan='4' class='table-center'>No purchases found.</td></tr>";
                 } else {
                     foreach($purchases as $p){
                         echo "<tr>";

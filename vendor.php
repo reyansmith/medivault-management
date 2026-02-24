@@ -9,6 +9,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== "admin") {
 
 // Handle Add Vendor form submission
 $message = "";
+$edit_vendor = null;
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['add_vendor'])) {
         $vendor_id = $_POST['vendor_id'];
@@ -26,6 +27,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->close();
     }
 
+    // Handle Update Vendor
+    if (isset($_POST['update_vendor'])) {
+        $vendor_id = $_POST['vendor_id'];
+        $name = $_POST['name'];
+        $phone = $_POST['phone'];
+        $address = $_POST['address'];
+
+        $stmt = $conn->prepare("UPDATE vendor SET name = ?, phone = ?, address = ? WHERE vendor_id = ?");
+        $stmt->bind_param("ssss", $name, $phone, $address, $vendor_id);
+        if ($stmt->execute()) {
+            $message = "Vendor updated successfully!";
+        } else {
+            $message = "Error updating vendor: " . $stmt->error;
+        }
+        $stmt->close();
+    }
+
     // Handle Remove Vendor
     if (isset($_POST['remove_vendor'])) {
         $vendor_id = $_POST['remove_vendor_id'];
@@ -38,6 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         $stmt->close();
     }
+}
+
+// Load vendor for edit form
+if (isset($_GET['edit']) && $_GET['edit'] !== "") {
+    $edit_id = $_GET['edit'];
+    $stmt = $conn->prepare("SELECT vendor_id, name, phone, address FROM vendor WHERE vendor_id = ? LIMIT 1");
+    $stmt->bind_param("s", $edit_id);
+    $stmt->execute();
+    $result_edit = $stmt->get_result();
+    if ($result_edit && $result_edit->num_rows > 0) {
+        $edit_vendor = $result_edit->fetch_assoc();
+    }
+    $stmt->close();
 }
 
 // Fetch vendors
@@ -66,24 +97,40 @@ if ($result) {
     <div class="box">
         <?php 
         if ($message) {
-            echo "<p style='color:green;'>" . $message . "</p>";
+            echo "<p class='vendor-message'>" . $message . "</p>";
         }
         ?>
 
         <!-- Add Vendor Button -->
-        <button id="addVendorBtn" style="margin-bottom:15px;">Add Vendor</button>
+        <button id="addVendorBtn" class="btn btn-primary vendor-add-btn">Add Vendor</button>
 
         <!-- Add Vendor Form (hidden initially) -->
-        <form id="addVendorForm" method="POST" style="display:none; margin-bottom:20px;">
-            <input type="text" name="vendor_id" placeholder="Vendor ID" required>
-            <input type="text" name="name" placeholder="Vendor Name" required>
-            <input type="text" name="phone" placeholder="Phone">
-            <input type="text" name="address" placeholder="Address">
-            <button type="submit" name="add_vendor">Save Vendor</button>
+        <form id="addVendorForm" method="POST" class="vendor-form-hidden">
+            <div class="vendor-form-row">
+                <input type="text" name="vendor_id" placeholder="Vendor ID" required class="vendor-input">
+                <input type="text" name="name" placeholder="Vendor Name" required class="vendor-input">
+                <input type="text" name="phone" placeholder="Phone" class="vendor-input">
+                <input type="text" name="address" placeholder="Address" class="vendor-input">
+                <button type="submit" name="add_vendor" class="btn btn-primary">Save Vendor</button>
+            </div>
         </form>
 
+        <?php if ($edit_vendor) { ?>
+            <form method="POST" class="vendor-edit-form">
+                <h3 class="vendor-edit-title">Edit Vendor</h3>
+                <div class="vendor-form-row">
+                    <input type="text" name="vendor_id" value="<?php echo htmlspecialchars($edit_vendor['vendor_id']); ?>" readonly class="vendor-input">
+                    <input type="text" name="name" value="<?php echo htmlspecialchars($edit_vendor['name']); ?>" required class="vendor-input">
+                    <input type="text" name="phone" value="<?php echo htmlspecialchars($edit_vendor['phone']); ?>" class="vendor-input">
+                    <input type="text" name="address" value="<?php echo htmlspecialchars($edit_vendor['address']); ?>" class="vendor-input">
+                    <button type="submit" name="update_vendor" class="btn btn-primary">Update Vendor</button>
+                    <a href="vendor.php" class="btn btn-secondary vendor-cancel-btn">Cancel</a>
+                </div>
+            </form>
+        <?php } ?>
+
         <div class="table-wrap">
-            <table class="leaderboard-table transactions-table">
+            <table class="leaderboard-table transactions-table vendor-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -104,13 +151,14 @@ if ($result) {
                             echo "<td>" . $vendor['name'] . "</td>";
                             echo "<td>" . $vendor['phone'] . "</td>";
                             echo "<td>" . $vendor['address'] . "</td>";
-                            echo "<td>";
+                            echo "<td><div class='action-wrap'>";
+                            echo "<a class='btn btn-primary btn-sm' href='vendor.php?edit=" . urlencode($vendor['vendor_id']) . "'>Edit</a>";
                             // Remove Vendor Form
-                            echo "<form method='POST' style='display:inline;' onsubmit=\"return confirm('Are you sure you want to remove this vendor?');\">";
+                            echo "<form method='POST' class='vendor-inline-form' onsubmit=\"return confirm('Are you sure you want to remove this vendor?');\">";
                             echo "<input type='hidden' name='remove_vendor_id' value='" . $vendor['vendor_id'] . "'>";
-                            echo "<button type='submit' name='remove_vendor'>Remove</button>";
+                            echo "<button type='submit' name='remove_vendor' class='btn btn-danger btn-sm'>Remove</button>";
                             echo "</form>";
-                            echo "</td>";
+                            echo "</div></td>";
                             echo "</tr>";
                         }
                     }
@@ -125,7 +173,7 @@ if ($result) {
 // Show/hide Add Vendor form
 document.getElementById('addVendorBtn').addEventListener('click', function() {
     var form = document.getElementById('addVendorForm');
-    if (form.style.display === 'none') {
+    if (form.style.display === 'none' || window.getComputedStyle(form).display === 'none') {
         form.style.display = 'block';
         this.textContent = 'Cancel';
     } else {

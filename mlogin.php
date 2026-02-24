@@ -61,55 +61,15 @@ if(isset($_POST['login']))
 <html>
 <head>
 <title>Medivault Login</title>
-<style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#0f9d9a;
-}
-.box{
-    width:400px;
-    margin:120px auto;
-    background:white;
-    padding:40px;
-    text-align:center;
-    border-radius:10px;
-    box-shadow:0px 0px 15px gray;
-}
-input{
-    width:90%;
-    padding:12px;
-    margin:10px 0;
-}
-button{
-    width:95%;
-    padding:12px;
-    background:navy;
-    color:white;
-    border:none;
-}
-button:hover{
-    background:darkblue;
-}
-a{
-    text-decoration:none;
-    color:navy;
-    font-weight:bold;
-}
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="auth-page">
 
-<div class="box">
+<div class="auth-box">
 <h2>MEDIVAULT LOGIN</h2>
 
 <form method="POST">
-
-<<<<<<< HEAD
-<input type="text" name="id" placeholder="Enter ID" required>
-=======
 <input type="number" name="id" placeholder="Enter ID" required>
->>>>>>> 1c4873777fa8a1ed238614dc3b9c96119edb2241
 <input type="text" name="username" placeholder="Enter Username" required>
 <input type="password" name="password" placeholder="Enter Password" required>
 
@@ -117,9 +77,7 @@ a{
 
 </form>
 
-<br>
-Don't have an account?
-<a href="mregistration.php">Register Here</a>
+<p class="auth-help">Don't have an account? <a href="mregistration.php">Register Here</a></p>
 
 </div>
 

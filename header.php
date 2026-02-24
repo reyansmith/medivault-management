@@ -11,7 +11,7 @@ $username = $_SESSION['username'] ?? ($_SESSION['name'] ?? "Admin");
     <meta charset="UTF-8">
     <title>Medivault</title>
    
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo filemtime(__DIR__ . '/style.css'); ?>">
 
     <script src="https://kit.fontawesome.com/6c8e1d3298.js" crossorigin="anonymous"></script>
 </head>
