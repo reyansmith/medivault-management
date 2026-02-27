@@ -8,7 +8,7 @@ if(isset($_POST['login']))
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    // 🔎 CHECK ADMIN
+    // CHECK ADMIN
     $admin_query = mysqli_query($conn,
         "SELECT * FROM admin 
          WHERE admin_id='$id' 
@@ -30,7 +30,7 @@ if(isset($_POST['login']))
         }
     }
 
-    // 🔎 CHECK EMPLOYEE
+    // CHECK EMPLOYEE
     $emp_query = mysqli_query($conn,
         "SELECT * FROM employee 
          WHERE emp_id='$id' 
@@ -55,29 +55,127 @@ if(isset($_POST['login']))
     echo "<script>alert('Invalid Details');</script>";
 }
 ?>
-   
+
 
 <!DOCTYPE html>
 <html>
 <head>
 <title>Medivault Login</title>
-<link rel="stylesheet" href="style.css">
+<style>
+body{
+    margin:0;
+    padding:0;
+    font-family: Arial, sans-serif;
+    background:#0f172a;   /* full dark theme */
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+/* Main Box */
+.login-container{
+    width:850px;
+    height:480px;
+    background:white;
+    border-radius:10px;
+    display:flex;
+    overflow:hidden;
+    box-shadow:0 4px 20px rgba(0, 0, 0, 0);
+}
+
+.login-left{
+    width:45%;
+    background:#2b6cb0;   /* professional medical blue */
+    color:white;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    padding:40px;
+}
+.login-left h1{
+    font-size:28px;
+    margin-bottom:10px;
+}
+
+.login-left p{
+    opacity:0.7;
+    text-align:center;
+}
+
+/* RIGHT SIDE */
+.login-right{
+    width:55%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.form-box{
+    width:75%;
+}
+
+.form-box h2{
+    margin-bottom:25px;
+    color:#1e293b;
+}
+
+/* Inputs */
+input{
+    width:100%;
+    padding:10px;
+    margin-bottom:20px;
+    border:1px solid #d1d5db;
+    border-radius:6px;
+    font-size:14px;
+}
+
+input:focus{
+    outline:none;
+    border:1px solid #2563eb;
+}
+
+/* Button – Same Theme Style */
+button{
+    width:100%;
+    padding:10px;
+    background:#1e293b;
+    color:white;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+    transition:0.2s;
+}
+
+button:hover{
+    background:#2563eb;
+}
+
+</style>
 </head>
-<body class="auth-page">
 
-<div class="auth-box">
-<h2>MEDIVAULT LOGIN</h2>
+<body>
 
-<form method="POST">
-<input type="number" name="id" placeholder="Enter ID" required>
-<input type="text" name="username" placeholder="Enter Username" required>
-<input type="password" name="password" placeholder="Enter Password" required>
+<div class="login-container">
 
-<button type="submit" name="login">Login</button>
+    <div class="login-left">
+        <h1>MEDIVAULT</h1>
+        <p>Mannath Medicals Web System</p>
+    </div>
 
-</form>
-
-<p class="auth-help">Don't have an account? <a href="mregistration.php">Register Here</a></p>
+    <div class="login-right">
+        <div class="form-box">
+            <h2>Login Your Account</h2>
+            <form method="POST">
+                <input type="number" name="id" placeholder="Enter ID" required>
+                <input type="text" name="username" placeholder="Enter Username" required>
+                <input type="password" name="password" placeholder="Enter Password" required>
+                <button type="submit" name="login">Login</button>
+            </form>
+        </div>
+    </div>
 
 </div>
 

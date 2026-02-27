@@ -20,8 +20,8 @@ $currentPage = basename($_SERVER['PHP_SELF'] ?? '');
             </a>
         </li>
 
-        <li class="<?php echo $currentPage === 'billing.php' ? 'active' : ''; ?>">
-            <a href="billing.php">
+        <li class="<?php echo $currentPage === 'bill.php' ? 'active' : ''; ?>">
+            <a href="bill.php">
                 <i class="fas fa-file-invoice-dollar"></i>
                 <span>Billing</span>
             </a>

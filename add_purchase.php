@@ -8,193 +8,288 @@ if(!isset($_SESSION['role']) || $_SESSION['role'] !== "admin"){
 }
 
 $message = "";
+$error = "";
 
+/* ========================= */
+/* AUTO GENERATE PURCHASE ID */
+/* ========================= */
+$result = $conn->query("
+    SELECT MAX(CAST(SUBSTRING(purchase_id,4) AS UNSIGNED)) AS max_id 
+    FROM purchase
+");
+
+$row = $result->fetch_assoc();
+$number = ($row['max_id'] !== NULL) ? $row['max_id'] + 1 : 1;
+$purchase_id = "PUR" . str_pad($number, 3, "0", STR_PAD_LEFT);
+
+
+/* ========================= */
+/* FORM SUBMIT */
+/* ========================= */
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
 
-    $purchase_id = $_POST['purchase_id'];   
-    $vendor_id = $_POST['vendor_id'];       
+    $vendor_id = trim($_POST['vendor_id']);
     $purchase_date = $_POST['purchase_date'];
 
-    $stmt = $conn->prepare("INSERT INTO purchase (purchase_id, vendor_id, purchase_date, total_amount) VALUES (?,?,?,0)");
-    $stmt->bind_param("sss", $purchase_id, $vendor_id, $purchase_date);
-    $stmt->execute();
-    $stmt->close();
+    if(empty($vendor_id) || empty($purchase_date)){
+        $error = "Vendor and Date required.";
+    } else {
 
-    $total_amount = 0;
+        $total_amount = 0;
 
-    foreach($_POST['medicine_id'] as $i => $med_id){
+        /* Insert Purchase */
+        $stmt = $conn->prepare("
+            INSERT INTO purchase (purchase_id, vendor_id, purchase_date, total_amount)
+            VALUES (?,?,?,0)
+        ");
+        $stmt->bind_param("sss", $purchase_id, $vendor_id, $purchase_date);
+        $stmt->execute();
+        $stmt->close();
 
-        $admin_id = $_POST['admin_id'][$i];
-        $quantity = $_POST['quantity'][$i];
-        $cost_price = $_POST['cost_price'][$i];
+        /* Generate purchase detail ID */
+        $res2 = $conn->query("
+            SELECT MAX(CAST(SUBSTRING(purchase_detail_id,3) AS UNSIGNED)) AS max_id 
+            FROM purchase_details
+        ");
+        $row2 = $res2->fetch_assoc();
+        $detail_number = ($row2['max_id'] !== NULL) ? $row2['max_id'] + 1 : 1;
 
-        $subtotal = $quantity * $cost_price;
-        $total_amount += $subtotal;
+        foreach($_POST['medicine_name'] as $i => $med_name){
 
-        $detail_id = $_POST['purchase_detail_id'][$i];
+            $description = $_POST['description'][$i];
+            $admin_id = $_POST['admin_id'][$i];
+            $quantity = (int)$_POST['quantity'][$i];
+            $cost_price = (float)$_POST['cost_price'][$i];
+            $batch_no = $_POST['batch_no'][$i];
+            $expiry_date = $_POST['expiry_date'][$i];
+            $selling_price = (float)$_POST['selling_price'][$i];
 
-        $stmt2 = $conn->prepare("INSERT INTO purchase_details (purchase_detail_id, purchase_id, medicine_id, admin_id, quantity, cost_price) VALUES (?,?,?,?,?,?)");
-        $stmt2->bind_param("sssiii", $detail_id, $purchase_id, $med_id, $admin_id, $quantity, $cost_price);
-        $stmt2->execute();
-        $stmt2->close();
+            if($quantity <= 0 || $cost_price <= 0 || $selling_price <= 0){
+                $error = "Invalid quantity or price.";
+                break;
+            }
 
-        /* ðŸ”¥ STOCK UPDATE (INCREASE INVENTORY) */
+            /* ================= PRODUCT AUTO ID ================= */
 
-        $check_stock = $conn->query("SELECT stock_id FROM stock WHERE medicine_id='$med_id' LIMIT 1");
+            $check_product = $conn->prepare("SELECT medicine_id FROM product WHERE medicine_name=?");
+            $check_product->bind_param("s", $med_name);
+            $check_product->execute();
+            $product_result = $check_product->get_result();
 
-        if($check_stock->num_rows > 0){
-            $conn->query("UPDATE stock 
-                          SET quantity = quantity + $quantity 
-                          WHERE medicine_id='$med_id'");
-        } else {
-            $new_stock_id = uniqid("STK");
-            $conn->query("INSERT INTO stock 
-                (stock_id, medicine_id, batch_no, expiry_date, quantity, selling_price)
-                VALUES 
-                ('$new_stock_id', '$med_id', 'NEW', CURDATE(), $quantity, 0)");
+            if($product_result->num_rows > 0){
+                $prod_row = $product_result->fetch_assoc();
+                $medicine_id = $prod_row['medicine_id'];
+            } else {
+
+                $resP = $conn->query("
+                    SELECT MAX(CAST(SUBSTRING(medicine_id,2) AS UNSIGNED)) AS max_id 
+                    FROM product
+                ");
+                $rowP = $resP->fetch_assoc();
+                $numP = ($rowP['max_id'] !== NULL) ? $rowP['max_id'] + 1 : 1;
+                $medicine_id = "P" . str_pad($numP, 3, "0", STR_PAD_LEFT);
+
+                $insert_product = $conn->prepare("
+                    INSERT INTO product (medicine_id, medicine_name, description)
+                    VALUES (?,?,?)
+                ");
+                $insert_product->bind_param("sss", $medicine_id, $med_name, $description);
+                $insert_product->execute();
+                $insert_product->close();
+            }
+
+            $detail_id = "PD" . str_pad($detail_number++, 3, "0", STR_PAD_LEFT);
+            $subtotal = $quantity * $cost_price;
+            $total_amount += $subtotal;
+
+            /* Insert purchase_details */
+            $stmt2 = $conn->prepare("
+                INSERT INTO purchase_details
+                (purchase_detail_id, purchase_id, medicine_id, admin_id, quantity, cost_price)
+                VALUES (?,?,?,?,?,?)
+            ");
+            $stmt2->bind_param("sssidd",
+                $detail_id,
+                $purchase_id,
+                $medicine_id,
+                $admin_id,
+                $quantity,
+                $cost_price
+            );
+            $stmt2->execute();
+            $stmt2->close();
+
+            /* ================= STOCK UPDATE ================= */
+
+            $check_stock = $conn->prepare("
+                SELECT stock_id, quantity 
+                FROM stock 
+                WHERE medicine_id=? AND batch_no=?
+            ");
+            $check_stock->bind_param("ss", $medicine_id, $batch_no);
+            $check_stock->execute();
+            $stock_result = $check_stock->get_result();
+
+            if($stock_result->num_rows > 0){
+
+                $row_stock = $stock_result->fetch_assoc();
+                $new_qty = $row_stock['quantity'] + $quantity;
+
+                $update_stock = $conn->prepare("
+                    UPDATE stock
+                    SET quantity=?, expiry_date=?, selling_price=?
+                    WHERE stock_id=?
+                ");
+                $update_stock->bind_param("idss",
+                    $new_qty,
+                    $expiry_date,
+                    $selling_price,
+                    $row_stock['stock_id']
+                );
+                $update_stock->execute();
+                $update_stock->close();
+
+            } else {
+
+                /* STOCK AUTO ID S001 */
+
+                $resS = $conn->query("
+                    SELECT MAX(CAST(SUBSTRING(stock_id,2) AS UNSIGNED)) AS max_id 
+                    FROM stock
+                ");
+                $rowS = $resS->fetch_assoc();
+                $numS = ($rowS['max_id'] !== NULL) ? $rowS['max_id'] + 1 : 1;
+                $stock_id = "S" . str_pad($numS, 3, "0", STR_PAD_LEFT);
+
+                $insert_stock = $conn->prepare("
+                    INSERT INTO stock
+                    (stock_id, medicine_id, batch_no, expiry_date, quantity, selling_price)
+                    VALUES (?,?,?,?,?,?)
+                ");
+                $insert_stock->bind_param("ssssid",
+                    $stock_id,
+                    $medicine_id,
+                    $batch_no,
+                    $expiry_date,
+                    $quantity,
+                    $selling_price
+                );
+                $insert_stock->execute();
+                $insert_stock->close();
+            }
+
+            $check_stock->close();
+        }
+
+        /* Update total amount */
+        $stmt3 = $conn->prepare("
+            UPDATE purchase SET total_amount=? WHERE purchase_id=?
+        ");
+        $stmt3->bind_param("ds", $total_amount, $purchase_id);
+        $stmt3->execute();
+        $stmt3->close();
+
+        if(empty($error)){
+            $message = "Purchase Successful! ID: $purchase_id | Total ₹".number_format($total_amount,2);
         }
     }
-
-    $stmt3 = $conn->prepare("UPDATE purchase SET total_amount=? WHERE purchase_id=?");
-    $stmt3->bind_param("ds", $total_amount, $purchase_id);
-    $stmt3->execute();
-    $stmt3->close();
-
-    $message = "Purchase added successfully! Total Amount: â‚¹" . $total_amount;
 }
 
-$sql = "
-SELECT pd.purchase_detail_id, pd.purchase_id, pd.medicine_id, pr.medicine_name, pd.admin_id, a.username AS admin_name, pd.quantity, pd.cost_price
-FROM purchase_details pd
-LEFT JOIN product pr ON pr.medicine_id = pd.medicine_id
-LEFT JOIN admin a ON a.admin_id = pd.admin_id
-ORDER BY pd.purchase_detail_id DESC
-";
-$result = $conn->query($sql);
-$details = [];
-if($result){
-    while($row = $result->fetch_assoc()){
-        $details[] = $row;
-    }
-}
-
-$vendor_result = $conn->query("SELECT vendor_id, name FROM vendor");
-$vendors = $vendor_result->fetch_all(MYSQLI_ASSOC);
-
-$admin_result = $conn->query("SELECT admin_id, username FROM admin");
-$admins = $admin_result->fetch_all(MYSQLI_ASSOC);
-
-$product_result = $conn->query("SELECT medicine_id, medicine_name FROM product");
-$products = $product_result->fetch_all(MYSQLI_ASSOC);
+/* Dropdown data */
+$vendors = $conn->query("SELECT vendor_id, name FROM vendor")->fetch_all(MYSQLI_ASSOC);
+$admins = $conn->query("SELECT admin_id, username FROM admin")->fetch_all(MYSQLI_ASSOC);
 
 include("header.php");
 include("sidebar.php");
 ?>
 
-<!-- REST OF YOUR HTML CODE REMAINS EXACTLY SAME -->
 <div class="main">
     <div class="topbar">
-        <h2>Add Purchase & Details</h2>
+        <div class="topbar-text">
+            <h2>Purchase Details</h2>
+        </div>
         <div class="top-actions">
-            <a href="purchases.php" class="btn">Back to Purchases</a>
             <a href="../logout.php" class="logout-btn">Logout</a>
         </div>
     </div>
+<div class="main">
+    <div class="topbar" style="display:flex; justify-content:space-between; align-items:center;">
+    <h2>Add Purchase</h2>
+    <a href="purchases.php" style="
+        padding:8px 15px;
+        background:#000;
+        color:#fff;
+        text-decoration:none;
+        border-radius:5px;">
+        ← Back to Purchase
+    </a>
+</div>
+<div class="box">
 
-    <div class="box">
-        <?php 
-        if($message) {
-            echo "<p class='status-success'>" . $message . "</p>";
-        }
-        ?>
+<?php if($error) echo "<p style='color:red'>$error</p>"; ?>
+<?php if($message) echo "<p style='color:green'>$message</p>"; ?>
 
-        <form method="POST" class="purchase-entry-form">
-            <h3>Purchase Info</h3>
-            <div class="purchase-info-row">
-                <input type="text" name="purchase_id" placeholder="Purchase ID" required>
-                <select name="vendor_id" required>
-                    <option value="">Select Vendor</option>
-                    <?php
-                    foreach($vendors as $v){
-                        echo "<option value='" . $v['vendor_id'] . "'>" . $v['vendor_id'] . " - " . $v['name'] . "</option>";
-                    }
-                    ?>
-                </select>
-                <input type="date" name="purchase_date" required>
-            </div>
+<form method="POST">
 
-            <h3>Purchase Details</h3>
-            <table class="purchase-form-table">
-                <tr>
-                    <th>Detail ID</th>
-                    <th>Medicine</th>
-                    <th>Admin</th>
-                    <th>Quantity</th>
-                    <th>Cost Price</th>
-                </tr>
-                <!-- Default single row -->
-                <tr>
-                    <td><input type="text" name="purchase_detail_id[]" required></td>
-                    <td>
-                        <select name="medicine_id[]" required>
-                            <option value="">Select Medicine</option>
-                            <?php
-                            foreach($products as $p){
-                                echo "<option value='" . $p['medicine_id'] . "'>" . $p['medicine_id'] . " - " . $p['medicine_name'] . "</option>";
-                            }
-                            ?>
-                        </select>
-                    </td>
-                    <td>
-                        <select name="admin_id[]" required>
-                            <option value="">Select Admin</option>
-                            <?php
-                            foreach($admins as $a){
-                                echo "<option value='" . $a['admin_id'] . "'>" . $a['username'] . "</option>";
-                            }
-                            ?>
-                        </select>
-                    </td>
-                    <td><input type="number" name="quantity[]" value="1" min="1" required></td>
-                    <td><input type="number" step="0.01" name="cost_price[]" value="0" required></td>
-                </tr>
-            </table>
+<h3>Purchase Info</h3>
 
-            <button type="submit" class="btn btn-primary">Add Purchase + Details</button>
-        </form>
+<input type="text" value="<?php echo $purchase_id; ?>" readonly>
 
-        <h3>Existing Purchase Details</h3>
-        <table class="purchase-list-table">
-            <tr>
-                <th>Detail ID</th>
-                <th>Purchase ID</th>
-                <th>Medicine ID</th>
-                <th>Medicine Name</th>
-                <th>Admin Name</th>
-                <th>Quantity</th>
-                <th>Cost Price</th>
-                <th>Subtotal</th>
-            </tr>
-            <?php
-            if(empty($details)){
-                echo "<tr><td colspan='8' class='table-center'>No details found</td></tr>";
-            } else {
-                foreach($details as $d){
-                    echo "<tr>";
-                    echo "<td>" . $d['purchase_detail_id'] . "</td>";
-                    echo "<td>" . $d['purchase_id'] . "</td>";
-                    echo "<td>" . $d['medicine_id'] . "</td>";
-                    echo "<td>" . ($d['medicine_name'] ?? '-') . "</td>";
-                    echo "<td>" . ($d['admin_name'] ?? '-') . "</td>";
-                    echo "<td>" . (int)$d['quantity'] . "</td>";
-                    echo "<td>â‚¹ " . number_format($d['cost_price'],2) . "</td>";
-                    echo "<td>â‚¹ " . number_format($d['quantity'] * $d['cost_price'],2) . "</td>";
-                    echo "</tr>";
-                }
-            }
-            ?>
-        </table>
-    </div>
+<select name="vendor_id" required>
+<option value="">Select Vendor</option>
+<?php foreach($vendors as $v){ ?>
+<option value="<?php echo $v['vendor_id']; ?>">
+<?php echo $v['name']; ?>
+</option>
+<?php } ?>
+</select>
+
+<input type="date" name="purchase_date" required>
+
+<h3>Purchase Details</h3>
+
+<table border="1" width="100%" cellpadding="8">
+<tr>
+<th>Medicine Name</th>
+<th>Description</th>
+<th>Admin</th>
+<th>Batch</th>
+<th>Expiry</th>
+<th>Qty</th>
+<th>Cost Price</th>
+<th>Selling Price</th>
+</tr>
+
+<tr>
+<td><input type="text" name="medicine_name[]" required></td>
+<td><input type="text" name="description[]" required></td>
+
+<td>
+<select name="admin_id[]" required>
+<option value="">Select</option>
+<?php foreach($admins as $a){ ?>
+<option value="<?php echo $a['admin_id']; ?>">
+<?php echo $a['username']; ?>
+</option>
+<?php } ?>
+</select>
+</td>
+
+<td><input type="text" name="batch_no[]" required></td>
+<td><input type="date" name="expiry_date[]" required></td>
+<td><input type="number" name="quantity[]" min="1" required></td>
+<td><input type="number" name="cost_price[]" step="0.01" required></td>
+<td><input type="number" name="selling_price[]" step="0.01" required></td>
+</tr>
+
+</table>
+
+<br>
+<button type="submit">Add Purchase</button>
+
+</form>
+
+</div>
 </div>
 
 <?php include("footer.php"); ?>
